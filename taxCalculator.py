@@ -1,6 +1,5 @@
 import pandas as pd
 from collections import deque
-import math
 
 def process_stocks(file_path, taxPeriodEnd):
     # Read the Excel file
@@ -35,7 +34,7 @@ def calculate_tax_single_stock(stockData):
     q = deque()
     for i in range(len(stockData)):
         transaction = stockData.iloc[i].copy()
-        if transaction["Transaction"] == "BUY":
+        if transaction["Transaction"] in "BUY":
             q.append(transaction)
         elif transaction["Transaction"] == "SELL":
             stocks2Sell = abs(transaction["Amount"])
@@ -51,19 +50,23 @@ def calculate_tax_single_stock(stockData):
                     stocks2Sell -= q[0]["Amount"]
                     q.popleft()
             if transaction['Date'] >= pd.to_datetime(taxPeriodStart):
-                # print(f"ticker {stockData.iloc[0]['Ticker']} taxBase {taxBase}")
+                print(f"ticker {stockData.iloc[0]['Ticker']} taxBase {taxBase}")
                 totalTaxBase += taxBase
         elif transaction["Transaction"] == "SPLIT":
             # print(f'Split {stockData.iloc[0]["Ticker"]} coefficient {transaction["Amount"]}')
             for record in q:
                 record["Amount"] *= transaction["Amount"]
-    # printBalance(q)    
+        else:
+            print(f'Dropping transaction {transaction["Transaction"]}')
+    # printBalance(q)
+    for record in q:
+        print(f'avg price {record["Spent"] / record["Amount"]} amont {record["Amount"]}')
     return calculateStats(q) + (totalTaxBase,)
         
 
 # Example usage
-file_path = 'stocks (2).xlsx'
-taxYear = 2024
+file_path = 'intel.xlsx'
+taxYear = 2025
 taxPeriodStart = f"{taxYear}-01-01"
 taxPeriodEnd = f"{taxYear}-12-31"
 
